@@ -27,7 +27,7 @@ let messages = [
 
 // ---------- API KEY ----------
 function getApiKey() { return localStorage.getItem("gemini_api_key") || ""; }
-function getModel()  { return localStorage.getItem("gemini_model") || "gemini-2.5-flash"; }
+function getModel()  { return localStorage.getItem("gemini_model") || "gemini-3.5-flash"; }
 function hasApiKey() { return getApiKey().length > 10; }
 
 function openModal() {
