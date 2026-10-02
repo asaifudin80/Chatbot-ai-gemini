@@ -21,7 +21,7 @@ let messages = [
     role: "system",
     content:
       "Kamu adalah asisten AI yang ramah dan membantu. Jawab dalam Bahasa Indonesia " +
-      "kecuali pengguna meminta bahasa lain. Jawaban panjang, jelas, dan to the point.",
+      "kecuali pengguna meminta bahasa lain. Jawaban singkat, bersahabat, jelas, dan to the point.",
   },
 ];
 
