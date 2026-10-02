@@ -21,7 +21,7 @@ let messages = [
     role: "system",
     content:
       "Kamu adalah asisten AI yang ramah dan membantu. Jawab dalam Bahasa Indonesia " +
-      "kecuali pengguna meminta bahasa lain. Jawaban singkat, jelas, dan to the point.",
+      "kecuali pengguna meminta bahasa lain. Jawaban panjang, jelas, dan to the point.",
   },
 ];
 
@@ -56,7 +56,7 @@ modal.addEventListener("click", (e) => { if (e.target === modal) closeModal(); }
 function addMessage(text, sender) {
   const div = document.createElement("div");
   div.className = `message ${sender}`;
-  div.textContent = text;
+  div.textContent = text,photo,video,link,dokumen;
   chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
 }
