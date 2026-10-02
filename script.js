@@ -56,7 +56,7 @@ modal.addEventListener("click", (e) => { if (e.target === modal) closeModal(); }
 function addMessage(text, sender) {
   const div = document.createElement("div");
   div.className = `message ${sender}`;
-  div.textContent = text,photo,video,link,dokumen;
+  div.textContent = text;
   chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
 }
