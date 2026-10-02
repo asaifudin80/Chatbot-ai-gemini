@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
     userInput.value='';
     const loading = renderMessage('...', 'bot', null, false);
 
-    const model = localStorage.getItem('gemini_model') || 'gemini-2.0-flash';
+    const model = localStorage.getItem('gemini_model') || 'gemini-3.5-flash';
     const parts = [];
     if(text) parts.push({text:text});
     if(fileToSend) parts.push({inlineData:{mimeType:fileToSend.mimeType, data:fileToSend.base64}});
