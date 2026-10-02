@@ -1,144 +1,173 @@
-// =========================================================
-// Chatbot AI dengan Google Gemini API
-// Menggunakan endpoint OpenAI-compatible dari Gemini,
-// jadi struktur kode hampir sama dengan versi OpenAI.
-// ⚠️ JANGAN commit API key ke GitHub — masukkan lewat menu ⚙️
-// =========================================================
+const chatBox = document.getElementById('chat-box');
+const chatForm = document.getElementById('chat-form');
+const userInput = document.getElementById('user-input');
 
-const chatBox     = document.getElementById("chat-box");
-const chatForm    = document.getElementById("chat-form");
-const userInput   = document.getElementById("user-input");
-const sendBtn     = document.getElementById("send-btn");
-const modal       = document.getElementById("api-modal");
-const settingsBtn = document.getElementById("settings-btn");
+const modal = document.getElementById('api-modal');
+const settingsBtn = document.getElementById('settings-btn');
+const closeModalBtn = document.getElementById('close-modal-btn');
+const saveApiBtn = document.getElementById('save-api-btn');
 
-// Endpoint Gemini yang kompatibel dengan format OpenAI
-const API_URL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
+let apiKeys = JSON.parse(localStorage.getItem('gemini_keys') || '[]');
+let activeKeyMode = localStorage.getItem('active_key_mode') || 'auto';
+let currentKeyIndex = 0;
 
-// Riwayat percakapan
-let messages = [
-  {
-    role: "system",
-    content:
-      "Kamu adalah asisten AI yang ramah dan membantu. Jawab dalam Bahasa Indonesia " +
-      "kecuali pengguna meminta bahasa lain. Jawaban singkat, bersahabat, jelas, dan to the point.",
-  },
-];
+// buka modal
+settingsBtn.onclick = () => modal.style.display = 'flex';
+closeModalBtn.onclick = () => modal.style.display = 'none';
+if(apiKeys.length === 0) modal.style.display = 'flex';
 
-// ---------- API KEY ----------
-function getApiKey() { return localStorage.getItem("gemini_api_key") || ""; }
-function getModel()  { return localStorage.getItem("gemini_model") || "gemini-3.5-flash"; }
-function hasApiKey() { return getApiKey().length > 10; }
+// load ke input
+document.getElementById('api-key-1').value = apiKeys[0] || '';
+document.getElementById('api-key-2').value = apiKeys[1] || '';
+document.getElementById('api-key-3').value = apiKeys[2] || '';
+document.getElementById('api-key-select').value = activeKeyMode;
 
-function openModal() {
-  document.getElementById("api-key-input").value = getApiKey();
-  document.getElementById("model-select").value = getModel();
-  modal.classList.add("show");
+saveApiBtn.onclick = () => {
+  const k1 = document.getElementById('api-key-1').value.trim();
+  const k2 = document.getElementById('api-key-2').value.trim();
+  const k3 = document.getElementById('api-key-3').value.trim();
+  const mode = document.getElementById('api-key-select').value;
+
+  if(!k1) return alert('Key 1 wajib diisi!');
+  apiKeys = [k1, k2, k3].filter(k => k!== '');
+  localStorage.setItem('gemini_keys', JSON.stringify(apiKeys));
+  localStorage.setItem('active_key_mode', mode);
+  localStorage.setItem('gemini_model', document.getElementById('model-select').value);
+  activeKeyMode = mode;
+  modal.style.display = 'none';
+  alert('✅ API Key disimpan! Mode: ' + mode);
 }
-function closeModal() { modal.classList.remove("show"); }
 
-document.getElementById("save-api-btn").addEventListener("click", () => {
-  const key = document.getElementById("api-key-input").value.trim();
-  const model = document.getElementById("model-select").value;
-  if (key) {
-    localStorage.setItem("gemini_api_key", key);
-    localStorage.setItem("gemini_model", model);
-    addMessage("✅ API Key Gemini tersimpan! Silakan ngobrol. 🎉", "bot");
+function getCurrentKey() {
+  if(activeKeyMode === 'auto') {
+    return apiKeys[currentKeyIndex % apiKeys.length];
+  } else {
+    return apiKeys[parseInt(activeKeyMode)] || apiKeys[0];
   }
-  closeModal();
-});
-
-settingsBtn.addEventListener("click", openModal);
-document.getElementById("close-modal-btn").addEventListener("click", closeModal);
-modal.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
-
-// ---------- TAMPILAN ----------
-function addMessage(text, sender) {
-  const div = document.createElement("div");
-  div.className = `message ${sender}`;
-  div.textContent = text;
-  chatBox.appendChild(div);
-  chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-function showTyping() {
-  const t = document.createElement("div");
-  t.className = "typing";
-  t.id = "typing";
-  t.innerHTML = "<span></span><span></span><span></span>";
-  chatBox.appendChild(t);
-  chatBox.scrollTop = chatBox.scrollHeight;
-}
-function hideTyping() {
-  const t = document.getElementById("typing");
-  if (t) t.remove();
-}
-
-// ---------- KONEKSI GEMINI ----------
-async function askGemini(userText) {
-  messages.push({ role: "user", content: userText });
-
-  const response = await fetch(API_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${getApiKey()}`,
-    },
-    body: JSON.stringify({
-      model: getModel(),
-      messages: messages,
-      temperature: 0.7,
-      max_tokens: 800,
-    }),
-  });
-
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    throw new Error(err.error?.message || `Error ${response.status}: ${response.statusText}`);
-  }
-
-  const data = await response.json();
-  const reply = data.choices[0].message.content;
-  messages.push({ role: "assistant", content: reply });
-  return reply;
-}
-
-// ---------- EVENT ----------
-chatForm.addEventListener("submit", async (e) => {
+chatForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   const text = userInput.value.trim();
-  if (!text) return;
+  if(!text) return;
 
-  if (!hasApiKey()) {
-    addMessage("⚠️ Kamu belum mengatur API Key. Klik tombol ⚙️ di kanan bawah dulu, ya!", "bot");
-    openModal();
-    return;
+  addMessage(text, 'user');
+  userInput.value = '';
+
+  const model = localStorage.getItem('gemini_model') || 'gemini-3.5-flash';
+
+  for(let i=0; i<apiKeys.length; i++){
+    try{
+      const key = getCurrentKey();
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({contents:[{parts:[{text:text}]}]})
+      });
+      const data = await res.json();
+      if(data.candidates){
+        addMessage(data.candidates[0].content.parts[0].text, 'bot');
+        return;
+      } else {
+        // limit habis, ganti key
+        console.log('Key limit, ganti:', data);
+        currentKeyIndex++;
+      }
+    }catch(err){ currentKeyIndex++; }
   }
-
-  addMessage(text, "user");
-  userInput.value = "";
-  sendBtn.disabled = true;
-  showTyping();
-
-  try {
-    const reply = await askGemini(text);
-    hideTyping();
-    addMessage(reply, "bot");
-  } catch (err) {
-    hideTyping();
-    addMessage("❌ " + err.message, "error");
-  } finally {
-    sendBtn.disabled = false;
-    userInput.focus();
-  }
+  addMessage('❌ Semua API Key limit (20/hari). Coba ganti model ke gemini-3.5-flash atau tambah key baru di ⚙️', 'bot');
 });
 
-// Pesan pembuka
-window.addEventListener("load", () => {
-  addMessage(
-    "Halo! 👋 Saya chatbot berbasis Google Gemini. " +
-    (hasApiKey() ? "Silakan bertanya apa saja!" : "Klik tombol ⚙️ untuk mengatur API Key kamu dulu."),
-    "bot"
-  );
-  if (!hasApiKey()) openModal();
+function addMessage(text, sender){
+  const div = document.createElement('div');
+  div.className = `message ${sender}`;
+  div.innerText = text;
+  chatBox.appendChild(div);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}const chatBox = document.getElementById('chat-box');
+const chatForm = document.getElementById('chat-form');
+const userInput = document.getElementById('user-input');
+
+const modal = document.getElementById('api-modal');
+const settingsBtn = document.getElementById('settings-btn');
+const closeModalBtn = document.getElementById('close-modal-btn');
+const saveApiBtn = document.getElementById('save-api-btn');
+
+let apiKeys = JSON.parse(localStorage.getItem('gemini_keys') || '[]');
+let activeKeyMode = localStorage.getItem('active_key_mode') || 'auto';
+let currentKeyIndex = 0;
+
+// buka modal
+settingsBtn.onclick = () => modal.style.display = 'flex';
+closeModalBtn.onclick = () => modal.style.display = 'none';
+if(apiKeys.length === 0) modal.style.display = 'flex';
+
+// load ke input
+document.getElementById('api-key-1').value = apiKeys[0] || '';
+document.getElementById('api-key-2').value = apiKeys[1] || '';
+document.getElementById('api-key-3').value = apiKeys[2] || '';
+document.getElementById('api-key-select').value = activeKeyMode;
+
+saveApiBtn.onclick = () => {
+  const k1 = document.getElementById('api-key-1').value.trim();
+  const k2 = document.getElementById('api-key-2').value.trim();
+  const k3 = document.getElementById('api-key-3').value.trim();
+  const mode = document.getElementById('api-key-select').value;
+
+  if(!k1) return alert('Key 1 wajib diisi!');
+  apiKeys = [k1, k2, k3].filter(k => k!== '');
+  localStorage.setItem('gemini_keys', JSON.stringify(apiKeys));
+  localStorage.setItem('active_key_mode', mode);
+  localStorage.setItem('gemini_model', document.getElementById('model-select').value);
+  activeKeyMode = mode;
+  modal.style.display = 'none';
+  alert('✅ API Key disimpan! Mode: ' + mode);
+}
+
+function getCurrentKey() {
+  if(activeKeyMode === 'auto') {
+    return apiKeys[currentKeyIndex % apiKeys.length];
+  } else {
+    return apiKeys[parseInt(activeKeyMode)] || apiKeys[0];
+  }
+}
+
+chatForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const text = userInput.value.trim();
+  if(!text) return;
+
+  addMessage(text, 'user');
+  userInput.value = '';
+
+  const model = localStorage.getItem('gemini_model') || 'gemini-3.5-flash';
+
+  for(let i=0; i<apiKeys.length; i++){
+    try{
+      const key = getCurrentKey();
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({contents:[{parts:[{text:text}]}]})
+      });
+      const data = await res.json();
+      if(data.candidates){
+        addMessage(data.candidates[0].content.parts[0].text, 'bot');
+        return;
+      } else {
+        // limit habis, ganti key
+        console.log('Key limit, ganti:', data);
+        currentKeyIndex++;
+      }
+    }catch(err){ currentKeyIndex++; }
+  }
+  addMessage('❌ Semua API Key limit (20/hari). Coba ganti model ke gemini-3.5-flash atau tambah key baru di ⚙️', 'bot');
 });
+
+function addMessage(text, sender){
+  const div = document.createElement('div');
+  div.className = `message ${sender}`;
+  div.innerText = text;
+  chatBox.appendChild(div);
+  chatBox.scrollTop = chatBox.scrollHeight;
+  }
