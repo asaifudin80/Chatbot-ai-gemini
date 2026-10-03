@@ -3,65 +3,93 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Chatbot AI - Gemini Pro</title>
+  <title>As AI Pro</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+      <h2>🤖 As AI</h2>
+      <button id="close-sidebar">✕</button>
+    </div>
+
+    <button id="new-chat-sidebar" class="new-chat-btn">+ Chat Baru</button>
+
+    <div class="sidebar-menu">
+      <p class="menu-label">Riwayat Chat</p>
+      <div id="chat-list-sidebar"></div>
+    </div>
+
+    <div class="sidebar-footer">
+      <div id="user-profile" style="display:none;">
+        <div class="user-avatar">👤</div>
+        <div>
+          <p id="user-email-display" style="font-size:12px; font-weight:bold;"></p>
+          <small style="color:#888;">Online</small>
+        </div>
+        <button id="logout-btn" title="Logout">🚪</button>
+      </div>
+      <button id="login-open-btn" class="login-btn">🔑 Login Email</button>
+      <button id="settings-open-btn" class="settings-sidebar-btn">⚙️ Pengaturan API</button>
+    </div>
+  </aside>
+
+  <!-- MAIN CHAT -->
   <div class="chat-container">
     <header class="chat-header">
+      <button id="open-sidebar">☰</button>
       <div>
-        <h1>🤖 As AI Pro</h1>
-        <p>Upload Foto/Video/File + Auto Save</p>
+        <h1 id="current-chat-title">Chat Baru</h1>
+        <p id="user-status">Silakan login dulu</p>
       </div>
-      <div class="header-btn">
-        <button id="clear-btn" title="Hapus Chat">🗑️</button>
-      </div>
+      <button id="clear-btn">🗑️</button>
     </header>
 
     <main id="chat-box" class="chat-box"></main>
-
-    <!-- Preview file -->
     <div id="file-preview" class="file-preview"></div>
 
     <form id="chat-form" class="chat-input">
-      <label for="file-input" class="file-btn" title="Upload Foto/Video/File">📎</label>
-      <input type="file" id="file-input" accept="image/*,video/*,.pdf,.txt,.docx" hidden />
-
-      <input type="text" id="user-input" placeholder="Ketik pesan atau upload file..." autocomplete="off" />
-      <button type="submit" id="send-btn">Kirim ➤</button>
+      <label for="file-input" class="file-btn">📎</label>
+      <input type="file" id="file-input" accept="image/*,video/*,.pdf,.txt" hidden />
+      <input type="text" id="user-input" placeholder="Ketik pesan..." autocomplete="off" />
+      <button type="submit">➤</button>
     </form>
   </div>
+</div>
 
-  <!-- Modal -->
-  <div id="api-modal" class="modal">
-    <div class="modal-content">
-      <h2>⚙️ Pengaturan API</h2>
-      <label>API Key 1 (wajib):</label>
-      <input type="password" id="api-key-1" placeholder="AIza...">
-      <label>API Key 2:</label>
-      <input type="password" id="api-key-2" placeholder="Opsional">
-      <label>API Key 3:</label>
-      <input type="password" id="api-key-3" placeholder="Opsional">
-      <label>Pilih Key:</label>
-      <select id="api-key-select">
-        <option value="0">Key 1</option>
-        <option value="1">Key 2</option>
-        <option value="2">Key 3</option>
-        <option value="auto">🔄 Auto-Rotasi (Anti Limit)</option>
-      </select>
-      <label>Model:</label>
-      <select id="model-select">
-        <option value="gemini-3.5-flash">gemini-3.5-flash (Bisa baca foto/video)</option>
-        <option value="gemini-3.5-flash-lite">gemini-3.5-flash-lite (Paling hemat)</option>
-      </select>
-      <div class="modal-actions">
-        <button id="save-api-btn">💾 Simpan</button>
-        <button id="close-modal-btn" class="secondary">Tutup</button>
-      </div>
+<!-- MODAL LOGIN EMAIL -->
+<div id="login-modal" class="modal">
+  <div class="modal-content">
+    <h2>🔑 Login Email</h2>
+    <p style="font-size:13px; color:#aaa; margin-bottom:12px;">Masuk pakai email kamu, chat akan tersimpan sesuai email.</p>
+    <label>Email:</label>
+    <input type="email" id="login-email" placeholder="kamu@gmail.com">
+    <label>Nama (bebas):</label>
+    <input type="text" id="login-name" placeholder="Nama kamu">
+    <div class="modal-actions">
+      <button id="login-submit-btn" style="background:#3b82f6; color:white; flex:1; padding:10px; border-radius:8px; border:none; font-weight:bold;">Masuk</button>
+      <button id="login-close-btn" class="secondary">Batal</button>
     </div>
   </div>
+</div>
 
-  <button id="settings-btn">⚙️</button>
-  <script src="script.js"></script>
+<!-- MODAL API -->
+<div id="api-modal" class="modal">
+  <div class="modal-content">
+    <h2>⚙️ Pengaturan API</h2>
+    <label>API Key 1:</label><input type="password" id="api-key-1" placeholder="AIza...">
+    <label>API Key 2:</label><input type="password" id="api-key-2" placeholder="AIza...">
+    <label>API Key 3:</label><input type="password" id="api-key-3" placeholder="AIza...">
+    <label>Mode Key:</label>
+    <select id="api-key-select"><option value="auto">🔄 Auto-Rotasi</option><option value="0">Key 1</option><option value="1">Key 2</option><option value="2">Key 3</option></select>
+    <label>Model:</label>
+    <select id="model-select"><option value="gemini-3.5-flash">gemini-3.5-flash (Support Foto)</option><option value="gemini-3.5-flash-lite">gemini-3.5-flash-lite (Hemat)</option></select>
+    <div class="modal-actions"><button id="save-api-btn">💾 Simpan</button><button id="close-modal-btn" class="secondary">Tutup</button></div>
+  </div>
+</div>
+
+<script src="script.js"></script>
 </body>
-  </html>
+        </html>
